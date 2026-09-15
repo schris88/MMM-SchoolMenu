@@ -290,13 +290,29 @@ module.exports = NodeHelper.create({
     }
   },
 
+  resolveAgyPath() {
+    const candidatePaths = [
+      "/home/sxlib/.local/bin/agy",
+      path.join(process.env.HOME || "", ".local", "bin", "agy"),
+      "/usr/local/bin/agy",
+      "/usr/bin/agy"
+    ];
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+    return "agy";
+  },
+
   generateImageWithAgy(item) {
     return new Promise((resolve) => {
+      const agyBin = this.resolveAgyPath();
       const prompt = `Use the generate_image tool to generate an appetizing, high-resolution food photo of the school lunch dish '${item.cleanDish}' served on a ceramic plate, styled like a fresh delicious meal. ImageName must be '${item.slug}'. After generating, copy the generated image file to '${item.targetPath}'.`;
       const escapedPrompt = prompt.replace(/"/g, '\\"');
-      const cmd = `agy -p "${escapedPrompt}" --dangerously-skip-permissions`;
+      const cmd = `${agyBin} -p "${escapedPrompt}" --dangerously-skip-permissions`;
 
-      console.log(`[MMM-SchoolMenu] Executing agy command...`);
+      console.log(`[MMM-SchoolMenu] Executing agy command with: ${agyBin}...`);
       exec(cmd, { timeout: 120000, env: process.env }, (error, stdout, stderr) => {
         if (error) {
           console.error(`[MMM-SchoolMenu] agy exec error:`, error.message);
@@ -313,7 +329,7 @@ module.exports = NodeHelper.create({
 
   recoverImageFromAgyBrain(slug, targetPath) {
     try {
-      const homeDir = process.env.HOME || "/Users/christianstengel";
+      const homeDir = process.env.HOME || "/home/sxlib";
       const brainBase = path.join(homeDir, ".gemini", "antigravity-cli", "brain");
       if (!fs.existsSync(brainBase)) return;
 
