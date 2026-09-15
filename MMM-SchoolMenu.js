@@ -3,7 +3,8 @@ Module.register("MMM-SchoolMenu", {
     daysToShow: 1, // Default is 1 (nur heute)
     width: "320px", // Default width matching MMM-Weather / standard modules
     maxWidth: "100%",
-    imageHeight: "58px", // Configurable image height (follows MM defaults)
+    imageHeight: "115px", // Prominent food photo height (child-friendly)
+    imagePosition: "top", // 'top' for prominent picture on top, 'left' for side thumbnail
     maxHeight: "none", // Optional max container height
     updateInterval: 60 * 60 * 1000, // 1 hour
     highlightToday: true,
@@ -170,8 +171,9 @@ Module.register("MMM-SchoolMenu", {
       day.menus.forEach((menu) => {
         if (menu.isEmpty) return;
 
+        const imgPos = this.config.imagePosition || "top";
         const menuRow = document.createElement("div");
-        menuRow.className = "sm-menu-item";
+        menuRow.className = `sm-menu-item img-pos-${imgPos}`;
 
         // Badges
         let badgeHtml = "";
