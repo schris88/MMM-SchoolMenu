@@ -101,8 +101,10 @@ Module.register("MMM-SchoolMenu", {
       const dayHeader = document.createElement("div");
       dayHeader.className = "sm-day-header";
       dayHeader.innerHTML = `
-        <span class="sm-day-name">${day.dayName}</span>
-        <span class="sm-day-date">${day.displayDate || ""}</span>
+        <div class="sm-day-header-left">
+          <span class="sm-day-name">${day.dayName}</span>
+          <span class="sm-day-date">${day.displayDate || ""}</span>
+        </div>
         ${isToday ? '<span class="sm-today-badge">HEUTE</span>' : ""}
       `;
       dayCard.appendChild(dayHeader);
@@ -137,7 +139,6 @@ Module.register("MMM-SchoolMenu", {
 
         if (menu.hasImage) {
           const img = document.createElement("img");
-          // Cache bust slightly with slug so browser renders new file
           img.src = this.file(`pics/${menu.imageFile}`) + `?t=${Date.now()}`;
           img.className = "sm-dish-image";
           img.alt = menu.cleanDish;
