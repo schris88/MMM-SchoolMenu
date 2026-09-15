@@ -7,7 +7,7 @@ Module.register("MMM-SchoolMenu", {
     highlightToday: true,
     showBadges: true,
     showAllergens: false,
-    headerTitle: "Schulmenü Tamm"
+    headerTitle: "" // Default: kein Header-Text
   },
 
   getStyles() {
@@ -71,15 +71,13 @@ Module.register("MMM-SchoolMenu", {
     // Find index of today
     let todayIdx = this.menuDays.findIndex((d) => d.isToday || d.dateStr === todayDateStr);
 
-    // On weekends (Saturday / Sunday) or if today not in loaded week, start at index 0 (Montag of the upcoming week)
+    // On weekends (Saturday / Sunday) or if today not in loaded week, start at index 0 (Montag of upcoming week)
     if (todayIdx === -1) {
       todayIdx = 0;
     }
 
-    // If starting from todayIdx would exceed length, adjust or show from todayIdx
     let endIdx = todayIdx + daysCount;
     if (endIdx > this.menuDays.length) {
-      // If single day requested at end of week (or Friday), keep todayIdx
       if (daysCount === 1) {
         return [this.menuDays[todayIdx]];
       }
@@ -120,11 +118,13 @@ Module.register("MMM-SchoolMenu", {
 
     wrapper.style.setProperty("--days-count", daysToRender.length);
 
-    // Header
-    const header = document.createElement("div");
-    header.className = "sm-header";
-    header.innerHTML = `<span class="sm-title"><i class="fa fa-utensils"></i> ${this.config.headerTitle}</span>`;
-    wrapper.appendChild(header);
+    // Header only if explicitly configured
+    if (this.config.headerTitle && this.config.headerTitle.trim() !== "") {
+      const header = document.createElement("div");
+      header.className = "sm-header";
+      header.innerHTML = `<span class="sm-title"><i class="fa fa-utensils"></i> ${this.config.headerTitle}</span>`;
+      wrapper.appendChild(header);
+    }
 
     // Days Container
     const daysContainer = document.createElement("div");
