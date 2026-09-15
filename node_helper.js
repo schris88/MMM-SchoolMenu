@@ -36,9 +36,33 @@ module.exports = NodeHelper.create({
     }
   },
 
+  getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  },
+
+  getMenuUrl() {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+    // On Saturday or Sunday: switch to next week as requested
+    if (day === 6 || day === 0) {
+      const nextMon = new Date(now);
+      nextMon.setDate(now.getDate() + (day === 6 ? 2 : 1));
+      const isoWeek = this.getISOWeek(nextMon);
+      const year = nextMon.getFullYear();
+      const weekStr = String(isoWeek).padStart(2, "0");
+      return `https://tamm.inetmenue.de/fs/menu/week/${year}W${weekStr}`;
+    }
+    return "https://tamm.inetmenue.de/fs/menu/week";
+  },
+
   fetchMenuHtml() {
     return new Promise((resolve, reject) => {
-      const url = "https://tamm.inetmenue.de/fs/menu/week";
+      const url = this.getMenuUrl();
+      console.log(`[MMM-SchoolMenu] Fetching weekly menu from: ${url}`);
       https.get(url, { headers: { "User-Agent": "Mozilla/5.0 MagicMirror/MMM-SchoolMenu" } }, (res) => {
         let data = "";
         res.on("data", (chunk) => (data += chunk));
@@ -190,7 +214,6 @@ module.exports = NodeHelper.create({
     }
 
     try {
-      console.log("[MMM-SchoolMenu] Fetching weekly menu from tamm.inetmenue.de...");
       const html = await this.fetchMenuHtml();
       const days = this.parseMenuHtml(html);
       this.cachedMenu = days;
@@ -213,7 +236,6 @@ module.exports = NodeHelper.create({
         if (menu.isEmpty || !menu.cleanDish) return;
         const targetPath = path.join(this.picsDir, menu.imageFile);
         if (!fs.existsSync(targetPath)) {
-          // Only add if not already in queue
           const inQueue = this.generationQueue.some((item) => item.slug === menu.slug);
           if (!inQueue) {
             console.log(`[MMM-SchoolMenu] Queuing image generation for: "${menu.cleanDish}" -> ${menu.imageFile}`);
@@ -254,7 +276,6 @@ module.exports = NodeHelper.create({
       await this.generateImageWithAgy(item);
       if (fs.existsSync(item.targetPath)) {
         console.log(`[MMM-SchoolMenu] Successfully generated & saved image: ${item.imageFile}`);
-        // Notify frontend to refresh picture
         this.safeSendSocketNotification("IMAGE_UPDATED", { slug: item.slug, imageFile: item.imageFile });
       } else {
         console.warn(`[MMM-SchoolMenu] Image generation finished but ${item.imageFile} not found at target.`);
@@ -263,7 +284,6 @@ module.exports = NodeHelper.create({
       console.error(`[MMM-SchoolMenu] Error generating image for ${item.slug}:`, err);
     } finally {
       this.isGenerating = false;
-      // Wait 3 seconds before next generation to avoid CLI contention
       setTimeout(() => {
         this.processGenerationQueue();
       }, 3000);
@@ -272,10 +292,7 @@ module.exports = NodeHelper.create({
 
   generateImageWithAgy(item) {
     return new Promise((resolve) => {
-      // Prompt agy to use generate_image tool and copy the resulting file to the target path
       const prompt = `Use the generate_image tool to generate an appetizing, high-resolution food photo of the school lunch dish '${item.cleanDish}' served on a ceramic plate, styled like a fresh delicious meal. ImageName must be '${item.slug}'. After generating, copy the generated image file to '${item.targetPath}'.`;
-
-      // Escape quotes for bash
       const escapedPrompt = prompt.replace(/"/g, '\\"');
       const cmd = `agy -p "${escapedPrompt}" --dangerously-skip-permissions`;
 
@@ -285,7 +302,6 @@ module.exports = NodeHelper.create({
           console.error(`[MMM-SchoolMenu] agy exec error:`, error.message);
         }
 
-        // If direct copy by agy didn't place the file, check ~/.gemini/antigravity-cli/brain/ for recent file
         if (!fs.existsSync(item.targetPath)) {
           this.recoverImageFromAgyBrain(item.slug, item.targetPath);
         }

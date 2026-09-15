@@ -1,7 +1,9 @@
 Module.register("MMM-SchoolMenu", {
   defaults: {
+    daysToShow: 1, // Default is 1 (nur heute)
+    imageHeight: "120px", // Configurable image height (follows MM defaults)
+    maxHeight: "none", // Optional max container height
     updateInterval: 60 * 60 * 1000, // 1 hour
-    showAllWeek: true,
     highlightToday: true,
     showBadges: true,
     showAllergens: false,
@@ -17,6 +19,11 @@ Module.register("MMM-SchoolMenu", {
     this.menuDays = [];
     this.loading = true;
     this.errorMessage = null;
+
+    // Backward compatibility for showAllWeek
+    if (this.config.showAllWeek !== undefined && this.config.daysToShow === undefined) {
+      this.config.daysToShow = this.config.showAllWeek ? 5 : 1;
+    }
 
     // Send config to node_helper to start fetching
     this.sendSocketNotification("CONFIG", this.config);
@@ -55,9 +62,45 @@ Module.register("MMM-SchoolMenu", {
     }
   },
 
+  getDaysToDisplay() {
+    if (!this.menuDays || this.menuDays.length === 0) return [];
+
+    const daysCount = Math.max(1, Math.min(parseInt(this.config.daysToShow, 10) || 1, this.menuDays.length));
+    const todayDateStr = new Date().toISOString().split("T")[0];
+
+    // Find index of today
+    let todayIdx = this.menuDays.findIndex((d) => d.isToday || d.dateStr === todayDateStr);
+
+    // On weekends (Saturday / Sunday) or if today not in loaded week, start at index 0 (Montag of the upcoming week)
+    if (todayIdx === -1) {
+      todayIdx = 0;
+    }
+
+    // If starting from todayIdx would exceed length, adjust or show from todayIdx
+    let endIdx = todayIdx + daysCount;
+    if (endIdx > this.menuDays.length) {
+      // If single day requested at end of week (or Friday), keep todayIdx
+      if (daysCount === 1) {
+        return [this.menuDays[todayIdx]];
+      }
+      return this.menuDays.slice(Math.max(0, this.menuDays.length - daysCount));
+    }
+
+    return this.menuDays.slice(todayIdx, endIdx);
+  },
+
   getDom() {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-schoolmenu-container";
+
+    // Set custom CSS variables for configurable heights
+    if (this.config.imageHeight) {
+      wrapper.style.setProperty("--sm-image-height", this.config.imageHeight);
+    }
+    if (this.config.maxHeight && this.config.maxHeight !== "none" && this.config.maxHeight !== "auto") {
+      wrapper.style.maxHeight = this.config.maxHeight;
+      wrapper.style.overflowY = "auto";
+    }
 
     if (this.loading) {
       wrapper.innerHTML = '<div class="sm-loading"><i class="fa fa-spinner fa-spin"></i> Lade Schulmenü...</div>';
@@ -69,10 +112,13 @@ Module.register("MMM-SchoolMenu", {
       return wrapper;
     }
 
-    if (!this.menuDays || this.menuDays.length === 0) {
+    const daysToRender = this.getDaysToDisplay();
+    if (daysToRender.length === 0) {
       wrapper.innerHTML = '<div class="sm-empty">Keine Menüdaten verfügbar.</div>';
       return wrapper;
     }
+
+    wrapper.style.setProperty("--days-count", daysToRender.length);
 
     // Header
     const header = document.createElement("div");
@@ -82,15 +128,9 @@ Module.register("MMM-SchoolMenu", {
 
     // Days Container
     const daysContainer = document.createElement("div");
-    daysContainer.className = "sm-days-grid" + (this.config.showAllWeek ? " all-week" : " single-day");
+    daysContainer.className = "sm-days-grid count-" + daysToRender.length;
 
     const todayDateStr = new Date().toISOString().split("T")[0];
-
-    const displayDays = this.config.showAllWeek
-      ? this.menuDays
-      : this.menuDays.filter((d) => d.dateStr === todayDateStr || d.isToday);
-
-    const daysToRender = displayDays.length > 0 ? displayDays : [this.menuDays[0]];
 
     daysToRender.forEach((day) => {
       const isToday = day.isToday || day.dateStr === todayDateStr;
