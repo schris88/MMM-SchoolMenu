@@ -1,7 +1,9 @@
 Module.register("MMM-SchoolMenu", {
   defaults: {
     daysToShow: 1, // Default is 1 (nur heute)
-    imageHeight: "120px", // Configurable image height (follows MM defaults)
+    width: "320px", // Default width matching MMM-Weather / standard modules
+    maxWidth: "100%",
+    imageHeight: "58px", // Configurable image height (follows MM defaults)
     maxHeight: "none", // Optional max container height
     updateInterval: 60 * 60 * 1000, // 1 hour
     highlightToday: true,
@@ -91,9 +93,19 @@ Module.register("MMM-SchoolMenu", {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-schoolmenu-container";
 
+    // Set width and margins (like MMM-Weather)
+    if (this.config.width) {
+      wrapper.style.width = this.config.width;
+    }
+    if (this.config.maxWidth) {
+      wrapper.style.maxWidth = this.config.maxWidth;
+    }
+    wrapper.style.margin = "0 auto";
+
     // Set custom CSS variables for configurable heights
     if (this.config.imageHeight) {
       wrapper.style.setProperty("--sm-image-height", this.config.imageHeight);
+      wrapper.style.setProperty("--sm-thumb-size", this.config.imageHeight);
     }
     if (this.config.maxHeight && this.config.maxHeight !== "none" && this.config.maxHeight !== "auto") {
       wrapper.style.maxHeight = this.config.maxHeight;
