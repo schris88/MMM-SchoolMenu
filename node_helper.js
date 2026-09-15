@@ -15,6 +15,16 @@ module.exports = NodeHelper.create({
     this.isGenerating = false;
     this.cachedMenu = null;
     this.lastFetched = 0;
+    this.cacheFile = path.join(__dirname, "menu_cache.json");
+    if (fs.existsSync(this.cacheFile)) {
+      try {
+        const raw = fs.readFileSync(this.cacheFile, "utf8");
+        this.cachedMenu = JSON.parse(raw);
+        console.log("[MMM-SchoolMenu] Loaded menu from disk cache.");
+      } catch (e) {
+        console.warn("[MMM-SchoolMenu] Failed to read disk cache:", e.message);
+      }
+    }
   },
 
   safeSendSocketNotification(notification, payload) {
@@ -219,6 +229,13 @@ module.exports = NodeHelper.create({
       this.cachedMenu = days;
       this.lastFetched = now;
 
+      // Save to disk cache
+      try {
+        fs.writeFileSync(this.cacheFile, JSON.stringify(days, null, 2), "utf8");
+      } catch (e) {
+        console.warn("[MMM-SchoolMenu] Failed to write disk cache:", e.message);
+      }
+
       // Send immediate menu data to frontend
       this.safeSendSocketNotification("MENU_DATA", days);
 
@@ -226,7 +243,12 @@ module.exports = NodeHelper.create({
       this.queueMissingImages(days);
     } catch (err) {
       console.error("[MMM-SchoolMenu] Error fetching menu:", err);
-      this.safeSendSocketNotification("MENU_ERROR", { message: err.message });
+      if (this.cachedMenu) {
+        console.log("[MMM-SchoolMenu] Serving fallback from disk/RAM cache.");
+        this.safeSendSocketNotification("MENU_DATA", this.cachedMenu);
+      } else {
+        this.safeSendSocketNotification("MENU_ERROR", { message: err.message });
+      }
     }
   },
 

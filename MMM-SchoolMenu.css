@@ -3,11 +3,11 @@
   color: var(--color-text, #f1f1f1);
   width: 100%;
   box-sizing: border-box;
-  padding: 4px 6px;
+  padding: 0;
   text-align: left;
   container-type: inline-size;
   --sm-image-height: 120px;
-  --sm-thumb-size: 58px;
+  --sm-thumb-size: 65px;
 }
 
 .sm-header {
@@ -41,24 +41,23 @@
   box-sizing: border-box;
 }
 
-/* Day Card */
+/* Day Card - schlicht & ohne Rahmen/Glow */
 .sm-day-card {
-  background: rgba(22, 25, 33, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 8px 10px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
 }
 
 .sm-day-card.is-today {
-  border-color: rgba(255, 202, 40, 0.65);
-  background: rgba(30, 34, 46, 0.95);
-  box-shadow: 0 0 14px rgba(255, 202, 40, 0.2), 0 3px 10px rgba(0, 0, 0, 0.3);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 /* Day Header */
@@ -108,19 +107,14 @@
   flex-grow: 1;
 }
 
-/* Menu Item Card */
+/* Menu Item Card - schlicht */
 .sm-menu-item {
   display: flex;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.2s ease;
-}
-
-.sm-menu-item:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border: none;
+  box-shadow: none;
 }
 
 /* Dish Image */
@@ -216,12 +210,8 @@
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--color-text, #f5f5f5);
-  line-height: 1.25;
+  line-height: 1.3;
   word-break: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .sm-dish-allergens {
