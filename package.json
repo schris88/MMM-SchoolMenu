@@ -1,0 +1,19 @@
+{
+  "name": "mmm-schoolmenu",
+  "version": "1.0.0",
+  "description": "MagicMirror module for Tamm school lunch menu with AI image generation using agy",
+  "main": "MMM-SchoolMenu.js",
+  "scripts": {
+    "test": "node test-scraper.js"
+  },
+  "keywords": [
+    "magicmirror",
+    "magicmirror2",
+    "school-menu",
+    "agy",
+    "food",
+    "ai-images"
+  ],
+  "author": "Christian Stengel",
+  "license": "MIT"
+}
