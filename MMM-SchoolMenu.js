@@ -149,17 +149,19 @@ Module.register("MMM-SchoolMenu", {
       const dayCard = document.createElement("div");
       dayCard.className = "sm-day-card" + (isToday && this.config.highlightToday ? " is-today" : "");
 
-      // Day Title Header
-      const dayHeader = document.createElement("div");
-      dayHeader.className = "sm-day-header";
-      dayHeader.innerHTML = `
-        <div class="sm-day-header-left">
-          <span class="sm-day-name">${day.dayName}</span>
-          <span class="sm-day-date">${day.displayDate || ""}</span>
-        </div>
-        ${isToday ? '<span class="sm-today-badge">HEUTE</span>' : ""}
-      `;
-      dayCard.appendChild(dayHeader);
+      // Day Title Header: ONLY RENDER IF MULTIPLE DAYS ARE DISPLAYED
+      if (daysToRender.length > 1) {
+        const dayHeader = document.createElement("div");
+        dayHeader.className = "sm-day-header";
+        dayHeader.innerHTML = `
+          <div class="sm-day-header-left">
+            <span class="sm-day-name">${day.dayName}</span>
+            <span class="sm-day-date">${day.displayDate || ""}</span>
+          </div>
+          ${isToday && this.config.highlightToday ? '<span class="sm-today-badge">HEUTE</span>' : ""}
+        `;
+        dayCard.appendChild(dayHeader);
+      }
 
       // Menus Container
       const menusList = document.createElement("div");
